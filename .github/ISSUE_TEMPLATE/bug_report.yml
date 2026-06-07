@@ -1,0 +1,54 @@
+name: Bug report
+description: Report a problem with the NWS Weather Forecast integration
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue.
+
+  - type: input
+    id: version
+    attributes:
+      label: Integration version
+      description: Version shown in HACS or in the integration manifest
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: ha-version
+    attributes:
+      label: Home Assistant version
+      placeholder: "2024.12.0"
+    validations:
+      required: true
+
+  - type: input
+    id: zip-code
+    attributes:
+      label: Zip code used in setup
+      placeholder: "80304"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Include any error messages from Settings → System → Logs
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Install integration
+        2. Add zip code 80304
+        3. See error
+    validations:
+      required: true

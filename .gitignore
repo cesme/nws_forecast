@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Local test output
+nws_raw_dump.json
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
