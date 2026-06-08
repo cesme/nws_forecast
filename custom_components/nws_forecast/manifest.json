@@ -8,6 +8,5 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/cesme/nws_forecast/issues",
   "requirements": [],
-  "version": "1.0.2",
-  "icon": "icon.png"
+  "version": "1.0.2"
 }
