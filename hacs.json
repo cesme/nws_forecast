@@ -3,6 +3,5 @@
   "content_in_root": false,
   "country": "US",
   "homeassistant": "2024.1.0",
-  "hacs": "1.32.0",
-  "iot_class": "cloud_polling"
+  "hacs": "1.32.0"
 }

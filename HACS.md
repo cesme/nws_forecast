@@ -8,8 +8,22 @@ Use this checklist before publishing the repository and submitting to HACS.
 2. Push this project to the repository.
 3. Set a repository **description**, for example:
    `Home Assistant integration for U.S. National Weather Service forecast and observation data`
-4. Add repository **topics**, for example:
-   `home-assistant`, `hacs`, `homeassistant`, `weather`, `nws`, `integration`
+4. Add repository **topics** (required for HACS validation). On GitHub:
+   1. Open your repo main page (`https://github.com/cesme/nws_forecast`)
+   2. Make sure you are on the **Code** tab (not Settings)
+   3. In the right sidebar, find **About**
+   4. Click the **gear icon** next to "About"
+   5. In the dialog, add topics such as:
+      `home-assistant`, `hacs`, `homeassistant`, `weather`, `nws`, `integration`
+   6. Click **Save changes**
+
+   If you do not see **About**, add a short description in that same gear dialog first.
+
+   Or from a terminal (if GitHub CLI is installed):
+
+   ```bash
+   gh repo edit cesme/nws_forecast --add-topic home-assistant --add-topic hacs --add-topic homeassistant --add-topic weather --add-topic nws --add-topic integration
+   ```
 5. Ensure **Issues** are enabled.
 
 ## 2. Update placeholder URLs and ownership
