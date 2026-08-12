@@ -17,7 +17,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfLength,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -211,6 +211,18 @@ class NWSWeatherEntity(CoordinatorEntity[NWSForecastCoordinator], WeatherEntity)
     async def async_update(self) -> None:
         """Update the entity from the coordinator."""
         await self.coordinator.async_request_refresh()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator.
+
+        CoordinatorEntity's default only writes entity state; forecast
+        subscribers (the frontend's push-based forecast card) are a separate
+        listener list that must be notified explicitly, or the daily/hourly
+        forecast shown in the UI goes stale until the card is remounted.
+        """
+        self.async_update_listeners(("daily", "hourly"))
+        super()._handle_coordinator_update()
 
     # --- Helper methods ---
 
