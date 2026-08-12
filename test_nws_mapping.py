@@ -475,6 +475,65 @@ class TestDailyPeriodPairing(unittest.TestCase):
         self.assertEqual(result[1]["native_temperature"], 72)
         self.assertEqual(result[1]["native_templow"], 48)
 
+    def test_starts_with_overnight_merges_into_same_day(self):
+        """First period is 'Overnight' (same date as next day) — must not
+        produce a second entry for that weekday."""
+        periods = [
+            _make_period("Overnight", "2026-05-19T01:00:00-06:00", False, 41, "Mostly Cloudy"),
+            _make_period("Tuesday", "2026-05-19T06:00:00-06:00", True, 68, "Sunny"),
+            _make_period("Tuesday Night", "2026-05-19T18:00:00-06:00", False, 44, "Clear"),
+            _make_period("Wednesday", "2026-05-20T06:00:00-06:00", True, 70, "Sunny"),
+        ]
+        result = pair_daily_periods(periods)
+
+        self.assertEqual(len(result), 2)
+        # Tuesday: high from the daytime period, low from the UPCOMING night
+        # (44) — not the already-past overnight low (41)
+        self.assertEqual(result[0]["native_temperature"], 68)
+        self.assertEqual(result[0]["native_templow"], 44)
+        self.assertEqual(result[0]["condition"], "sunny")
+        self.assertEqual(result[0]["datetime"][:10], "2026-05-19")
+        self.assertEqual(result[1]["native_temperature"], 70)
+        self.assertEqual(result[1]["datetime"][:10], "2026-05-20")
+
+    def test_overnight_low_used_only_when_no_upcoming_night(self):
+        """Overnight temp is the fallback low when the day has no night period."""
+        periods = [
+            _make_period("Overnight", "2026-05-19T01:00:00-06:00", False, 41, "Cloudy"),
+            _make_period("Tuesday", "2026-05-19T06:00:00-06:00", True, 68, "Sunny"),
+        ]
+        result = pair_daily_periods(periods)
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["native_temperature"], 68)
+        self.assertEqual(result[0]["native_templow"], 41)
+
+    def test_no_duplicate_weekdays_with_overnight(self):
+        """No two daily entries may fall on the same calendar date."""
+        # Generated periods start Monday 2026-05-18; the Overnight period is
+        # the tail of that same Monday, as NWS returns it before 6am.
+        periods = [
+            _make_period("Overnight", "2026-05-18T02:00:00", False, 41, "Cloudy"),
+        ] + _generate_forecast_periods(FORECAST_DAYS)
+        result = pair_daily_periods(periods)
+        dates = [entry["datetime"][:10] for entry in result]
+        self.assertEqual(len(dates), len(set(dates)),
+                         f"Duplicate calendar dates in daily forecast: {dates}")
+
+    def test_tonight_on_earlier_date_stays_standalone(self):
+        """'Tonight' starts the evening BEFORE the next day — keep it separate."""
+        periods = [
+            _make_period("Tonight", "2026-05-18T19:00:00-06:00", False, 39, "Clear"),
+            _make_period("Tuesday", "2026-05-19T06:00:00-06:00", True, 68, "Sunny"),
+            _make_period("Tuesday Night", "2026-05-19T18:00:00-06:00", False, 44, "Clear"),
+        ]
+        result = pair_daily_periods(periods)
+
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0]["native_temperature"], 39)
+        self.assertEqual(result[1]["native_temperature"], 68)
+        self.assertEqual(result[1]["native_templow"], 44)
+
     def test_day_without_following_night(self):
         """Day period at end of data with no matching night."""
         periods = [

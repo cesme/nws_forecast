@@ -1,5 +1,7 @@
 """Constants for NWS Weather Forecast integration."""
 
+from datetime import date, datetime
+
 DOMAIN = "nws_forecast"
 
 CONF_ZIP_CODE = "zip_code"
@@ -215,6 +217,21 @@ def extract_precip_probability(precip_field) -> int:
     return 0
 
 
+def period_date(period: dict) -> date | None:
+    """Return the local calendar date of a period's startTime.
+
+    Returns None when startTime is missing or unparseable, so callers must
+    treat "unknown date" as "don't compare".
+    """
+    start = period.get("startTime") or ""
+    if not start:
+        return None
+    try:
+        return datetime.fromisoformat(start.replace("Z", "+00:00")).date()
+    except (ValueError, TypeError):
+        return None
+
+
 def pair_daily_periods(periods: list[dict]) -> list[dict]:
     """Pair NWS day/night forecast periods into daily forecast entries.
 
@@ -223,57 +240,64 @@ def pair_daily_periods(periods: list[dict]) -> list[dict]:
       - "Monday Night" (isDaytime=False, low temp)
 
     Home Assistant's weather card expects ONE entry per day with both
-    native_temperature (high) and native_templow (low).
+    native_temperature (high) and native_templow (low), and it labels each
+    entry with the weekday of its datetime — so two entries sharing a
+    calendar date render the same weekday twice.
 
     This function handles these scenarios:
     1. Normal day+night pair → combines into one entry
-    2. Starts with night period (e.g., "Tonight") → standalone entry
-    3. Day period without following night → standalone entry
-    4. Consecutive night periods → each becomes standalone
+    2. Leading night period on the SAME date as the next daytime period
+       (NWS "Overnight", returned between midnight and 6am) → dropped, so
+       the weekday isn't duplicated. A forecast should look forward, so the
+       day's low comes from the UPCOMING night, not from the overnight low
+       that has already happened. The overnight temp is used only as a
+       fallback when that day has no following night period at all.
+    3. Leading night period on an EARLIER date (NWS "Tonight") → standalone
+    4. Day period without following night → standalone entry
+    5. Consecutive night periods → each becomes standalone
 
     Returns a list of dicts matching HA's Forecast TypedDict shape.
     """
     daily = []
     i = 0
+    # Temp from an "Overnight" period that shares its date with the following
+    # daytime period. Already-past, so it's only a fallback low for that day.
+    overnight_low = None
 
     while i < len(periods):
         period = periods[i]
         is_day = period.get("isDaytime", True)
+        next_period = periods[i + 1] if i + 1 < len(periods) else None
 
-        entry = {
-            "datetime": period.get("startTime", ""),
-            "condition": map_nws_condition(
-                period.get("shortForecast", ""), is_day
-            ),
-            "precipitation_probability": extract_precip_probability(
-                period.get("probabilityOfPrecipitation", {})
-            ),
-            "native_wind_speed": parse_wind_speed_text(
-                period.get("windSpeed", "")
-            ),
-            "wind_bearing": period.get("windDirection") or None,
-        }
+        if not is_day and _is_same_date_as_next_day(period, next_period):
+            # "Overnight" case: the tail of the night that belongs to the
+            # following daytime period's own date. Emitting it separately
+            # would duplicate that weekday on the card.
+            overnight_low = period.get("temperature")
+            i += 1
+            continue
 
+        entry = _build_daily_entry(period, is_day)
         temp = period.get("temperature")
 
         if is_day:
             # Daytime period → this is the high
             entry["native_temperature"] = temp
             # Check if next period is the matching night
-            if (
-                i + 1 < len(periods)
-                and not periods[i + 1].get("isDaytime", True)
-            ):
-                night = periods[i + 1]
-                entry["native_templow"] = night.get("temperature")
+            if next_period is not None and not next_period.get("isDaytime", True):
+                # The upcoming night is the forward-looking low
+                entry["native_templow"] = next_period.get("temperature")
                 i += 2
             else:
-                # No matching night — leave templow absent
-                entry["native_templow"] = None
+                # No upcoming night — fall back to the overnight low, if any
+                entry["native_templow"] = overnight_low
                 i += 1
+            overnight_low = None
         else:
-            # Night-only period (e.g., first period is "Tonight")
-            # Use the night temp as both — HA needs native_temperature
+            # Night-only period (e.g., first period is "Tonight", which starts
+            # the evening before the next day, or a trailing night at the end
+            # of the data). Use the night temp as both — HA needs
+            # native_temperature.
             entry["native_temperature"] = temp
             entry["native_templow"] = temp
             i += 1
@@ -281,6 +305,27 @@ def pair_daily_periods(periods: list[dict]) -> list[dict]:
         daily.append(entry)
 
     return daily
+
+
+def _is_same_date_as_next_day(period: dict, next_period: dict | None) -> bool:
+    """True if next_period is a daytime period on the same calendar date."""
+    if next_period is None or not next_period.get("isDaytime", True):
+        return False
+    this_date = period_date(period)
+    return this_date is not None and this_date == period_date(next_period)
+
+
+def _build_daily_entry(period: dict, is_day: bool) -> dict:
+    """Build the non-temperature fields of a daily forecast entry."""
+    return {
+        "datetime": period.get("startTime", ""),
+        "condition": map_nws_condition(period.get("shortForecast", ""), is_day),
+        "precipitation_probability": extract_precip_probability(
+            period.get("probabilityOfPrecipitation", {})
+        ),
+        "native_wind_speed": parse_wind_speed_text(period.get("windSpeed", "")),
+        "wind_bearing": period.get("windDirection") or None,
+    }
 
 
 def build_hourly_forecasts(periods: list[dict], limit: int = 48) -> list[dict]:
