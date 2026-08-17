@@ -221,7 +221,7 @@ class NWSWeatherEntity(CoordinatorEntity[NWSForecastCoordinator], WeatherEntity)
         listener list that must be notified explicitly, or the daily/hourly
         forecast shown in the UI goes stale until the card is remounted.
         """
-        self.async_update_listeners(("daily", "hourly"))
+        self.hass.async_create_task(self.async_update_listeners(("daily", "hourly")))
         super()._handle_coordinator_update()
 
     # --- Helper methods ---
