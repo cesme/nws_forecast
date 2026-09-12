@@ -50,19 +50,34 @@ Fix any failures before continuing.
 
 ## 4. Register brand assets
 
-Integration icons come **only** from the [home-assistant/brands](https://github.com/home-assistant/brands)
-repository. Home Assistant does not read an icon out of the `custom_components` folder, so brands is
-both what gives the integration an icon in the HA UI and a requirement for the HACS default store.
+Two separate things want brand images, and they read from different places.
 
-Submit a pull request to brands adding:
+### HACS validation (required, already satisfied)
+
+The HACS `brands` check looks for a brand directory in this repository and only falls back to the
+brands repository if it is missing:
 
 ```text
-custom_integrations/nws_forecast/icon.png      256x256 PNG (required)
-custom_integrations/nws_forecast/icon@2x.png   512x512 PNG (required)
+custom_components/nws_forecast/brand/icon.png      256x256 PNG (required by the check)
+custom_components/nws_forecast/brand/icon@2x.png   512x512 PNG
+```
+
+Deleting this directory fails HACS validation with
+`<Validation brands> failed: The repository does not provide brand assets...`.
+
+### Home Assistant UI icon (recommended)
+
+The HA frontend loads integration icons from the brands CDN, not from `custom_components`, so the
+icon only appears in the HA UI after a pull request to
+[home-assistant/brands](https://github.com/home-assistant/brands) adding:
+
+```text
+custom_integrations/nws_forecast/icon.png      256x256 PNG
+custom_integrations/nws_forecast/icon@2x.png   512x512 PNG
 custom_integrations/nws_forecast/logo.png      optional
 ```
 
-Correctly sized files are prepared in `../brand-assets/custom_integrations/nws_forecast/`
+The same correctly sized files are staged in `../brand-assets/custom_integrations/nws_forecast/`
 (outside this repository), alongside the 1024x1024 master.
 
 ## 5. Create a GitHub release
@@ -85,11 +100,15 @@ Users can add your repo manually in HACS:
 
 To be included in the default HACS integration list:
 
-1. Complete all steps above.
-2. Ensure GitHub Actions pass without `ignore` overrides.
-3. Open an issue using the HACS default repository template:
-   [Submit integration to default store](https://github.com/hacs/default/issues/new?template=integration.yml)
-4. Follow the review process documented at [hacs.xyz/docs/publish/include](https://www.hacs.xyz/docs/publish/include/).
+1. Complete all steps above, including a published release.
+2. Ensure the HACS Action and Hassfest pass without any errors or `ignore` overrides.
+3. Fork [hacs/default](https://github.com/hacs/default), create a branch from `master`, and add
+   `cesme/nws_forecast` to the `./integration` file **in alphabetical order**.
+4. Open the pull request from a personal account (not an organization), and fill out the template
+   completely — incomplete PRs are closed without notice.
+5. Review takes months; track it in the [backlog](https://github.com/hacs/default/pulls).
+
+Full requirements: [hacs.xyz/docs/publish/include](https://www.hacs.xyz/docs/publish/include/).
 
 ## 7. Final manual test
 
@@ -107,6 +126,7 @@ On a real Home Assistant instance:
 .github/workflows/validate.yml
 .github/ISSUE_TEMPLATE/
 custom_components/nws_forecast/
+custom_components/nws_forecast/brand/icon.png
 hacs.json
 LICENSE
 README.md
