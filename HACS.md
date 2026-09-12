@@ -65,20 +65,24 @@ custom_components/nws_forecast/brand/icon@2x.png   512x512 PNG
 Deleting this directory fails HACS validation with
 `<Validation brands> failed: The repository does not provide brand assets...`.
 
-### Home Assistant UI icon (recommended)
+### Home Assistant UI icon (already satisfied)
 
-The HA frontend loads integration icons from the brands CDN, not from `custom_components`, so the
-icon only appears in the HA UI after a pull request to
-[home-assistant/brands](https://github.com/home-assistant/brands) adding:
+Since Home Assistant 2026.3, a custom integration's own `brand/` directory is served through the
+local brands proxy API and **takes priority over the brands CDN** — no separate submission needed.
+See [the announcement](https://developers.home-assistant.io/blog/2026/02/24/brands-proxy-api).
 
-```text
-custom_integrations/nws_forecast/icon.png      256x256 PNG
-custom_integrations/nws_forecast/icon@2x.png   512x512 PNG
-custom_integrations/nws_forecast/logo.png      optional
-```
+The same `brand/` files above cover this.
 
-The same correctly sized files are staged in `../brand-assets/custom_integrations/nws_forecast/`
-(outside this repository), alongside the 1024x1024 master.
+### home-assistant/brands PR (optional, only for older installs)
+
+`hacs.json` declares a minimum of Home Assistant 2024.1.0. Users on releases older than 2026.3 do
+not get local brand images and still fall back to the CDN, so a pull request to
+[home-assistant/brands](https://github.com/home-assistant/brands) adding
+`custom_integrations/nws_forecast/{icon.png,icon@2x.png}` would give those users an icon. Note that
+brands now labels `custom_integrations/` a legacy folder.
+
+Correctly sized copies are staged in `../brand-assets/custom_integrations/nws_forecast/` (outside
+this repository), alongside the 1024x1024 master.
 
 ## 5. Create a GitHub release
 
