@@ -4,7 +4,7 @@ Use this checklist before publishing the repository and submitting to HACS.
 
 ## 1. Create the GitHub repository
 
-1. Create a **public** repository on GitHub (suggested name: `ha-nws-forecast`).
+1. Create a **public** repository on GitHub (this project uses `cesme/nws_forecast`).
 2. Push this project to the repository.
 3. Set a repository **description**, for example:
    `Home Assistant integration for U.S. National Weather Service forecast and observation data`
@@ -28,7 +28,7 @@ Use this checklist before publishing the repository and submitting to HACS.
 
 ## 2. Update placeholder URLs and ownership
 
-If your GitHub username or repository name is not `seyme/ha-nws-forecast`, update these files:
+If your GitHub username or repository name is not `cesme/nws_forecast`, update these files:
 
 - `custom_components/nws_forecast/manifest.json`
   - `codeowners`
@@ -50,25 +50,20 @@ Fix any failures before continuing.
 
 ## 4. Register brand assets
 
-HACS and Home Assistant expect brand images for integrations.
+Integration icons come **only** from the [home-assistant/brands](https://github.com/home-assistant/brands)
+repository. Home Assistant does not read an icon out of the `custom_components` folder, so brands is
+both what gives the integration an icon in the HA UI and a requirement for the HACS default store.
 
-### Option A: Local brand in this repository (already included)
-
-Home Assistant loads the integration icon from:
-
-- `custom_components/nws_forecast/brand/icon.png` (required for HA UI)
-- `brand/icon.png` (repo root copy for HACS/docs)
-
-### Option B: Home Assistant brands repository (required for HACS default store)
-
-Submit a pull request to [home-assistant/brands](https://github.com/home-assistant/brands):
+Submit a pull request to brands adding:
 
 ```text
-custom_integrations/nws_forecast/icon.png
-custom_integrations/nws_forecast/logo.png   (optional)
+custom_integrations/nws_forecast/icon.png      256x256 PNG (required)
+custom_integrations/nws_forecast/icon@2x.png   512x512 PNG (required)
+custom_integrations/nws_forecast/logo.png      optional
 ```
 
-Use a 256×256 PNG for the icon.
+Correctly sized files are prepared in `../brand-assets/custom_integrations/nws_forecast/`
+(outside this repository), alongside the 1024x1024 master.
 
 ## 5. Create a GitHub release
 
@@ -83,7 +78,7 @@ Use a 256×256 PNG for the icon.
 Users can add your repo manually in HACS:
 
 - **Settings → Devices & Services → HACS → Integrations → Custom repositories**
-- URL: `https://github.com/YOUR_USER/ha-nws-forecast`
+- URL: `https://github.com/cesme/nws_forecast`
 - Category: **Integration**
 
 ### Default HACS store (optional, review required)
@@ -111,7 +106,6 @@ On a real Home Assistant instance:
 ```text
 .github/workflows/validate.yml
 .github/ISSUE_TEMPLATE/
-brand/icon.png
 custom_components/nws_forecast/
 hacs.json
 LICENSE

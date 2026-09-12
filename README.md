@@ -1,6 +1,6 @@
 # NWS Weather Forecast
 
-[![Validate](https://github.com/seyme/ha-nws-forecast/actions/workflows/validate.yml/badge.svg)](https://github.com/seyme/ha-nws-forecast/actions/workflows/validate.yml)
+[![Validate](https://github.com/cesme/nws_forecast/actions/workflows/validate.yml/badge.svg)](https://github.com/cesme/nws_forecast/actions/workflows/validate.yml)
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 
 A Home Assistant custom integration that provides weather data from the [U.S. National Weather Service (NWS) API](https://www.weather.gov/documentation/services-web-api).
@@ -15,23 +15,13 @@ This integration is intended for **United States locations only**.
 - Setup via UI config flow using a 5-digit US zip code
 - Polls NWS every hour (manual refresh also supported)
 
-## Integration icon
-
-Home Assistant looks for the integration icon at:
-
-```text
-custom_components/nws_forecast/brand/icon.png
-```
-
-Use a **256×256 PNG**. If you see "icon not available" in HA, make sure that file exists on your instance (not just at the integration root).
-
 ## Installation
 
 ### HACS (recommended)
 
 1. Open **HACS → Integrations → Explore & Download Repositories** (or add as a custom repository).
 2. Add this repository as a custom repository if it is not in the default store yet:
-   - Repository URL: `https://github.com/seyme/ha-nws-forecast`
+   - Repository URL: `https://github.com/cesme/nws_forecast`
    - Category: **Integration**
 3. Search for **NWS Weather Forecast** and install it.
 4. Restart Home Assistant.
